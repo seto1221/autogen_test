@@ -1,0 +1,60 @@
+[config]
+skip_core_tasks = true
+
+[tasks.agent]
+description = "Agent の実行"
+dependencies = ["venv_make"]
+script = [
+    ". .venv/bin/activate",
+    "python main.py"
+]
+
+[tasks.llmstart]
+description = "Fake LLM サーバーをバックグラウンドで起動"
+dependencies = ["venv_make"]
+script = [
+    ". .venv/bin/activate",
+    "nohup uvicorn fake_llm_server:app --port 8000 > /var/log/fake_llm.log 2>&1 &"
+]
+
+[tasks.llmstop]
+description = "Fake LLM サーバーを停止"
+ignore_errors = true
+script = [
+    "pgrep -fl [f]ake_llm_server && kill -INT `pgrep -f [f]ake_llm_server`"
+]
+
+[tasks.clean]
+description = "ログやキャッシュの削除"
+script = [
+    "rm -rf /var/log/fake_llm.log /var/log/build_runner __pycache__"
+]
+
+[tasks.venv_make]
+description = "仮想環境の作成"
+condition = { files_not_exist = [".venv"] }
+script = [
+    "python3 -m venv .venv"
+]
+
+[tasks.venv_clean]
+description = "仮想環境の削除"
+script = [
+    "rm -rf .venv"
+]
+
+[tasks.pip_upgrade]
+description = "pip のアップグレード"
+dependencies = ["venv_make"]
+script = [
+    ". .venv/bin/activate",
+    "pip install --upgrade pip"
+]
+
+[tasks.mod_install]
+description = "依存ライブラリのインストール"
+dependencies = ["pip_upgrade"]
+script = [
+    ". .venv/bin/activate",
+    "pip install uvicorn fastapi autogen-agentchat autogen-ext[openai]"
+]
