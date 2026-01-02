@@ -1,33 +1,47 @@
 [config]
 skip_core_tasks = true
 
+[env]
+LOGDIR = "${CARGO_MAKE_WORKING_DIRECTORY}/log"
+PROJDIR = "${CARGO_MAKE_WORKING_DIRECTORY}/proj"
+IMAGE = "build"
+
 [tasks.agent]
 description = "Agent の実行"
-dependencies = ["venv_make"]
+dependencies = ["venv_make", "logdir_make"]
 script = [
     ". .venv/bin/activate",
     "python main.py"
 ]
 
-[tasks.llmstart]
+[tasks.llm_start]
 description = "Fake LLM サーバーをバックグラウンドで起動"
-dependencies = ["venv_make"]
+dependencies = ["venv_make", "logdir_make"]
 script = [
     ". .venv/bin/activate",
-    "nohup uvicorn fake_llm_server:app --port 8000 > /var/log/fake_llm.log 2>&1 &"
+    "nohup uvicorn fake_llm_server:app --port 8000 > ${LOGDIR}/fake_llm.log 2>&1 &"
 ]
 
-[tasks.llmstop]
+[tasks.llm_stop]
 description = "Fake LLM サーバーを停止"
 ignore_errors = true
 script = [
-    "pgrep -fl [f]ake_llm_server && kill -INT `pgrep -f [f]ake_llm_server`"
+    "pkill -INT -f [f]ake_llm_server"
 ]
 
-[tasks.clean]
-description = "ログやキャッシュの削除"
+[tasks.logdir_make]
+description = "ログディレクトリの作成"
+condition = { files_not_exist = ["${LOGDIR}"] }
 script = [
-    "rm -rf /var/log/fake_llm.log /var/log/build_runner __pycache__"
+    "mkdir ${LOGDIR}"
+]
+
+[tasks.logdir_clean]
+description = "ログディレクトリの削除"
+script = [
+    "rm -f ${LOGDIR}/fake_llm.log",
+    "rm -f ${LOGDIR}/build_runner_*.log",
+    "rmdir ${LOGDIR}"
 ]
 
 [tasks.venv_make]
@@ -40,6 +54,7 @@ script = [
 [tasks.venv_clean]
 description = "仮想環境の削除"
 script = [
+    "rm -rf __pycache__",
     "rm -rf .venv"
 ]
 
@@ -57,4 +72,28 @@ dependencies = ["pip_upgrade"]
 script = [
     ". .venv/bin/activate",
     "pip install uvicorn fastapi autogen-agentchat autogen-ext[openai]"
+]
+
+[tasks.img_build]
+description = "ビルド用コンテナイメージ作成"
+script = [
+    "docker build -t ${IMAGE} ."
+]
+
+[tasks.img_clean]
+description = "ビルド用コンテナイメージ削除"
+script = [
+    "docker rmi ${IMAGE}"
+]
+
+[tasks.src_build]
+description = "テストコードのビルド"
+script = [
+    "docker run --rm -t -v \"${PROJDIR}:/work\" ${IMAGE}"
+]
+
+[tasks.src_clean]
+description = "テストコードのクリーン"
+script = [
+    "docker run --rm -t -v \"${PROJDIR}:/work\" ${IMAGE} clean"
 ]

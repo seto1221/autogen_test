@@ -6,9 +6,9 @@ import subprocess
 import uuid
 from pathlib import Path
 
-LOGDIR = os.environ["BUILD_RUNNER_LOGDIR"]
-WORKDIR = os.environ["BUILD_RUNNER_WORKDIR"]
-IMAGE = "rustc"
+LOGDIR = os.environ["LOGDIR"]
+PROJDIR = os.environ["PROJDIR"]
+IMAGE = "build"
 
 def run_build():
     build_id = str(uuid.uuid4())
@@ -21,7 +21,7 @@ def run_build():
             [
                 "docker", "run", "--rm",
                 "--network=none",
-                "-v", f"{WORKDIR}:/work",
+                "-v", f"{PROJDIR}:/work",
                 IMAGE
             ],
             stdout=f,
