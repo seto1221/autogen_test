@@ -1,11 +1,11 @@
-# mcp_client.py
+# tool_client.py
 import subprocess
 import json
 
 class BuildRunnerClient:
     def __init__(self):
         self.proc = subprocess.Popen(
-            ["python", "build_runner_stdio.py"],
+            ["python", "build_runner_server.py"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             text=True

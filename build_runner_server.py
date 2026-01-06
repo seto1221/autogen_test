@@ -1,4 +1,4 @@
-# build_runner_stdio.py
+# build_runner_server.py
 import os
 import sys
 import json
@@ -14,7 +14,7 @@ def run_build():
     build_id = str(uuid.uuid4())
     log_dir = Path(LOGDIR)
     log_dir.mkdir(exist_ok=True)
-    log_file = log_dir / f"build_runner_{build_id}.log"
+    log_file = log_dir / f"build_{build_id}.log"
 
     with log_file.open("w") as f:
         subprocess.run(
@@ -31,7 +31,7 @@ def run_build():
     return {"build_id": build_id}
 
 def get_build_log(build_id):
-    log_file = Path(LOGDIR) / f"build_runner_{build_id}.log"
+    log_file = Path(LOGDIR) / f"build_{build_id}.log"
     return {"log": log_file.read_text() if log_file.exists() else ""}
 
 def main():

@@ -40,7 +40,7 @@ script = [
 description = "ログディレクトリの削除"
 script = [
     "rm -f ${LOGDIR}/fake_llm.log",
-    "rm -f ${LOGDIR}/build_runner_*.log",
+    "rm -f ${LOGDIR}/build_*.log",
     "rmdir ${LOGDIR}"
 ]
 
